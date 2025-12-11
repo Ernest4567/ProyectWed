@@ -3,10 +3,10 @@ require_once dirname(__DIR__, 2) . '/config/db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre = (isset($_POST['nombre']) ? $_POST['nombre'] : "");
-    $descripcion = (isset($_POST['descripcion']) ? $_POST['descripcion'] : "");
-    $precio = (isset($_POST['precio']) ? $_POST['precio'] : "");
-    $stock = (isset($_POST['stock']) ? $_POST['stock'] : "");
-    $proveedor_id = (isset($_POST['proveedor_id']) ? $_POST['proveedor_id'] : "");
+    $email = (isset($_POST['email']) ? $_POST['email'] : "");
+    $telefono = (isset($_POST['telefono']) ? $_POST['telefono'] : "");
+    $direccion = (isset($_POST['direccion']) ? $_POST['direccion'] : "");
+    $empresa = (isset($_POST['empresa']) ? $_POST['empresa'] : "");
     
     $imagen = "";
     if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
@@ -26,82 +26,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $imagen = $nombreLimpio;
         } else {
             echo '<div class="alert alert-warning" role="alert">
-  Advertencia: No se pudo subir la imagen, pero el producto será creado sin imagen.
+  Advertencia: No se pudo subir la imagen, pero el proveedor será creado sin imagen.
 </div>';
         }
     }
     
     try {
-        $stmt = $conn->prepare("INSERT INTO productos(id, nombre, descripcion, precio, stock, imagen, proveedor_id) VALUES(null,:nombre,:descripcion,:precio,:stock,:imagen,:proveedor_id)");
+        $stmt = $conn->prepare("INSERT INTO proveedores(nombre, email, telefono, direccion, empresa, imagen) VALUES(:nombre,:email,:telefono,:direccion,:empresa,:imagen)");
         $stmt->bindParam(":nombre", $nombre);
-        $stmt->bindParam(":descripcion", $descripcion);
-        $stmt->bindParam(":precio", $precio);
-        $stmt->bindParam(":stock", $stock);
+        $stmt->bindParam(":email", $email);
+        $stmt->bindParam(":telefono", $telefono);
+        $stmt->bindParam(":direccion", $direccion);
+        $stmt->bindParam(":empresa", $empresa);
         $stmt->bindParam(":imagen", $imagen);
-        $stmt->bindParam(":proveedor_id", $proveedor_id);
 
         if ($stmt->execute()) {
             echo '<div class="alert alert-success" role="alert">
-  Producto agregado correctamente <a href="readproducto.php" class="alert-link">Volver a productos</a>.
+  Proveedor agregado correctamente <a href="readproveedores.php" class="alert-link">Volver a proveedores</a>.
 </div>';
         } else {
             echo '<div class="alert alert-danger" role="alert">
-  Error al agregar el producto <a href="readproducto.php" class="alert-link">Intenta nuevamente</a>.
+  Error al agregar el proveedor <a href="readproveedores.php" class="alert-link">Intenta nuevamente</a>.
 </div>';
         }
     } catch (PDOException $e) {
-        echo '<div class="alert alert-danger" role="alert">
-  Error: ' . $e->getMessage() . '
-</div>';
+        echo "Error: " . $e->getMessage();
     }
 }
 ?>
-<!-- Modal de Crear Producto -->
+<!-- Modal de Crear Proveedor -->
 <div class="modal" id="create" tabindex="-1" aria-labelledby="modalLoginLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title center" id="modalLoginLabel"><i class="bi bi-box-seam"></i> AGREGAR PRODUCTO</h5>
+                <h5 class="modal-title center" id="modalLoginLabel"><i class="bi bi-person-plus"></i> AGREGAR PROVEEDOR</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="" method="post" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <i class="bi bi-pencil-fill"></i>
-                        <label for="inputNombre" class="form-label"> Nombre del Producto</label>
-                        <input type="text" class="form-control" id="inputNombre" name="nombre" placeholder="Ingresa el nombre del producto" required />
+                        <i class="bi bi-building"></i>
+                        <label for="inputNombre" class="form-label"> Nombre del Proveedor</label>
+                        <input type="text" class="form-control" id="inputNombre" name="nombre" placeholder="Ingresa el nombre del proveedor" required />
                     </div>
                     <div class="mb-3">
-                        <i class="bi bi-card-text"></i>
-                        <label for="inputDescripcion" class="form-label"> Descripción</label>
-                        <textarea class="form-control" id="inputDescripcion" name="descripcion" rows="3" placeholder="Describe el producto" required></textarea>
+                        <i class="bi bi-envelope"></i>
+                        <label for="inputEmail" class="form-label"> Email</label>
+                        <input type="email" class="form-control" id="inputEmail" name="email" placeholder="correo@proveedor.com" required />
                     </div>
                     <div class="mb-3">
-                        <i class="bi bi-currency-dollar"></i>
-                        <label for="inputPrecio" class="form-label"> Precio</label>
-                        <input type="number" step="0.01" class="form-control" id="inputPrecio" name="precio" placeholder="0.00" required />
+                        <i class="bi bi-telephone"></i>
+                        <label for="inputTelefono" class="form-label"> Teléfono</label>
+                        <input type="text" class="form-control" id="inputTelefono" name="telefono" placeholder="1234567890" required />
                     </div>
                     <div class="mb-3">
-                        <i class="bi bi-boxes"></i>
-                        <label for="inputStock" class="form-label"> Stock</label>
-                        <input type="number" class="form-control" id="inputStock" name="stock" placeholder="Cantidad en inventario" required />
+                        <i class="bi bi-geo-alt"></i>
+                        <label for="inputDireccion" class="form-label"> Dirección</label>
+                        <textarea class="form-control" id="inputDireccion" name="direccion" rows="2" placeholder="Dirección completa" required></textarea>
                     </div>
                     <div class="mb-3">
-                        <i class="bi bi-people-fill"></i>
-                        <label for="inputProveedor" class="form-label"> Proveedor</label>
-                        <select class="form-control" id="inputProveedor" name="proveedor_id" required>
-                            <option value="" disabled selected>Selecciona un proveedor</option>
-                            <?php
-                            $proveedores = $conn->query("SELECT id, nombre FROM proveedores")->fetchAll(PDO::FETCH_ASSOC);
-                            foreach ($proveedores as $proveedor) {
-                                echo '<option value="' . $proveedor['id'] . '">' . htmlspecialchars($proveedor['nombre']) . '</option>';
-                            }
-                            ?>
-                        </select>
+                        <i class="bi bi-briefcase"></i>
+                        <label for="inputEmpresa" class="form-label"> Empresa</label>
+                        <input type="text" class="form-control" id="inputEmpresa" name="empresa" placeholder="Nombre de la empresa" required />
                     </div>
                     <div class="mb-3">
                         <i class="bi bi-image"></i>
-                        <label for="inputImage" class="form-label"> Imagen</label>
+                        <label for="inputImagen" class="form-label"> Imagen</label>
                         <input type="file" class="form-control" name="imagen" id="imagen" accept="image/*" />
                         <small class="text-muted">Formatos: JPG, PNG, GIF (opcional)</small>
                     </div>
