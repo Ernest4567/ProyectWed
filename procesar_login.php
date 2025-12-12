@@ -17,4 +17,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo  "<script>alert('Crendeciales incorrectas.'); window.location.href = 'login.php';</script>";
     }
 }
-?>
+//n2
+?>  
